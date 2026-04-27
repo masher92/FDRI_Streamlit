@@ -6,7 +6,18 @@ import sys
 # -----------------------------
 # 📌 SIDEBAR CONTROLS
 # -----------------------------
-station_id = st.sidebar.text_input("Station ID", value="026017")
+url = f"https://catalogue.ceh.ac.uk/datastore/eidchub/211710ac-f01b-4b52-807f-373babb1c368/2_metadata/2_1_station_identification_metadata/00_station_id_meta.csv"
+station_ids = pd.read_csv(url)
+station_ids = station_ids['station_id'].astype(str).str.zfill(6)
+
+station_list = sorted(station_ids)  # <-- you define this
+
+station_id = st.sidebar.selectbox(
+    "Station ID",
+    options=station_list,
+    index=0
+)
+
 sid = station_id
 
 qc_column = 1
