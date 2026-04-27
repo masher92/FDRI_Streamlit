@@ -40,16 +40,17 @@ if "active_station" not in st.session_state:
 
 # -----------------------------
 # 🚀 RUN ONLY WHEN GO IS PRESSED
-# -----------------------------
+# -----------------------------#
 if go or st.session_state.active_station is None:
 
-    st.session_state.active_station = station_id
-    st.session_state.active_qc_column = qc_column
-    st.session_state.active_qc_flags = qc_flags
+    with st.spinner("Loading station data and building events..."):
+        st.session_state.active_station = station_id
+        st.session_state.active_qc_column = qc_column
+        st.session_state.active_qc_flags = qc_flags
 
-    # reset labelling state
-    st.session_state.i = 0
-    st.session_state.results = []
+        # reset labelling state
+        st.session_state.i = 0
+        st.session_state.results = []
 
 # -----------------------------
 # 📌 USE ACTIVE SETTINGS
