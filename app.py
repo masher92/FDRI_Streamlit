@@ -28,7 +28,7 @@ qc_column = st.sidebar.selectbox(
     index=0
 )
 
-QC_flags_list = [0,1,2,3,4,5,6,7,8,9]
+QC_flags_list = ["0","1","2","3","4","5","6","7","8","9"]
 
 qc_flags = st.sidebar.selectbox(
     "QC_column",
