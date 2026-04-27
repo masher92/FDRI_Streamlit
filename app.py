@@ -81,7 +81,7 @@ st.write(
 )
 
 # (keep your test duplication if needed)
-runs_list = runs + runs
+runs_list = runs
 
 # -----------------------------
 # 🛑 END CONDITION
