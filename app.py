@@ -4,6 +4,12 @@ import pandas as pd
 import sys
 
 # -----------------------------
+# 📦 IMPORTS / FUNCTIONS
+# -----------------------------
+sys.path.insert(1, '../')
+from functions import *
+
+# -----------------------------
 # 📌 SIDEBAR CONTROLS
 # -----------------------------
 url = f"https://catalogue.ceh.ac.uk/datastore/eidchub/211710ac-f01b-4b52-807f-373babb1c368/2_metadata/2_1_station_identification_metadata/00_station_id_meta.csv"
@@ -14,62 +20,52 @@ station_list = sorted(station_ids)  # <-- you define this
 
 station_id = st.sidebar.selectbox(
     "Station ID",
-    options=station_list,
-    index=0
+    options=station_list
 )
 
+qc_column = st.sidebar.number_input("QC Column", value=1, step=1)
+qc_flags = st.sidebar.text_input("QC Flags", value="7")
+
+go = st.sidebar.button("▶ Go")
+
+# -----------------------------
+# 🧠 SESSION STATE SETUP
+# -----------------------------
+if "active_station" not in st.session_state:
+    st.session_state.active_station = None
+    st.session_state.active_qc_column = None
+    st.session_state.active_qc_flags = None
+    st.session_state.i = 0
+    st.session_state.results = []
+
+# -----------------------------
+# 🚀 RUN ONLY WHEN GO IS PRESSED
+# -----------------------------
+if go or st.session_state.active_station is None:
+
+    st.session_state.active_station = station_id
+    st.session_state.active_qc_column = qc_column
+    st.session_state.active_qc_flags = qc_flags
+
+    # reset labelling state
+    st.session_state.i = 0
+    st.session_state.results = []
+
+# -----------------------------
+# 📌 USE ACTIVE SETTINGS
+# -----------------------------
+station_id = st.session_state.active_station
+qc_column = st.session_state.active_qc_column
+qc_flags = st.session_state.active_qc_flags
 sid = station_id
-
-QC_column_list = [1,2,3]
-
-qc_column = st.sidebar.selectbox(
-    "QC_column",
-    options=QC_column_list,
-    index=0
-)
-
-QC_flags_list = ["0","1","2","3","4","5","6","7","8","9"]
-
-qc_flags = st.sidebar.selectbox(
-    "QC_column",
-    options=QC_flags_list,
-    index=0
-)
-
-
-
-# -----------------------------
-# 🔁 RESET SESSION IF STATION CHANGES
-# -----------------------------
-if "prev_station" not in st.session_state:
-    st.session_state.prev_station = station_id
-
-if station_id != st.session_state.prev_station:
-    st.session_state.i = 0
-    st.session_state.results = []
-    st.session_state.prev_station = station_id
-
-# -----------------------------
-# 🧠 SESSION STATE INIT
-# -----------------------------
-if "i" not in st.session_state:
-    st.session_state.i = 0
-    st.session_state.results = []
 
 i = st.session_state.i
 
 # -----------------------------
-# 📦 IMPORTS / FUNCTIONS
-# -----------------------------
-sys.path.insert(1, '../')
-from functions import *
-
-# -----------------------------
-# 📊 LOAD & PREP DATA
+# 📊 LOAD DATA
 # -----------------------------
 df = load_station_data(station_id)
 
-# Clean data
 df = remove_empty(df)
 df["value"] = pd.to_numeric(df["value"], errors="coerce")
 
@@ -107,7 +103,7 @@ st.write(
 )
 
 # (keep your test duplication if needed)
-runs_list = runs
+runs_list = runs + runs
 
 # -----------------------------
 # 🛑 END CONDITION
