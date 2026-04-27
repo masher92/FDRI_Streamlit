@@ -31,8 +31,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-station_id = '026017'
-sid = '026017'
+station_id = st.sidebar.text_input("Station ID", value="026017")
+sid = station_id
+
+if "prev_station" not in st.session_state:
+    st.session_state.prev_station = station_id
+
+if station_id != st.session_state.prev_station:
+    st.session_state.i = 0
+    st.session_state.results = []
+    st.session_state.prev_station = station_id
+
+station_id = st.sidebar.text_input("Station ID", value="026017")
+
+if st.sidebar.button("Load station"):
+    st.session_state.i = 0
+    st.session_state.results = []
+    st.session_state.prev_station = station_id
 
 qc_column = 1
 qc_flags = "7"
