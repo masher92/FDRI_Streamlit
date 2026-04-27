@@ -1,39 +1,20 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
-
-# -----------------------------
-# 🔧 YOUR DATA SETUP HERE
-# -----------------------------
-# df must exist with datetime index + "value" column
-# runs must be list of (start, end)
-# sid must exist
-
-# Example placeholders (REMOVE THESE)
-# df = ...
-# runs = ...
-# sid = "station_1"
-
-import os
-import pandas as pd
 import sys
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
-import ipywidgets as widgets
-import ipywidgets as widgets
-from IPython.display import display, clear_output
 
-sys.path.insert(1, '../')
-from functions import *
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
+# -----------------------------
+# 📌 SIDEBAR CONTROLS
+# -----------------------------
 station_id = st.sidebar.text_input("Station ID", value="026017")
 sid = station_id
 
+qc_column = 1
+qc_flags = "7"
+
+# -----------------------------
+# 🔁 RESET SESSION IF STATION CHANGES
+# -----------------------------
 if "prev_station" not in st.session_state:
     st.session_state.prev_station = station_id
 
@@ -41,58 +22,6 @@ if station_id != st.session_state.prev_station:
     st.session_state.i = 0
     st.session_state.results = []
     st.session_state.prev_station = station_id
-
-station_id = st.sidebar.text_input("Station ID", value="026017")
-
-if st.sidebar.button("Load station"):
-    st.session_state.i = 0
-    st.session_state.results = []
-    st.session_state.prev_station = station_id
-
-qc_column = 1
-qc_flags = "7"
-
-df = load_station_data(station_id)
-df.head()
-
-# Clean rows where value is string 'NA' (but keep numeric instances of NAN)
-df = remove_empty(df)
-# Ensure values are numeric
-df["value"] = pd.to_numeric(df["value"], errors="coerce")
-# Normalised flags to 3 characters
-flag_padded = normalize_flag_to_3char(df["flag"])
-# Store the padded flags in the dataframe so they are visible when inspecting the data
-df["flag_padded"] = flag_padded
-df.head()
-
-flag_str = pd.to_numeric(df["flag"], errors="coerce").fillna(0).astype(int).astype(str).str.zfill(3)
-
-for col in ("value", "flag"):
-    if col not in df.columns:
-        print(f"⚠️ Column '{col}' not found in {path}; skipping station {station_id}.")
-        break
-
-# Infer timestep from the full series index
-expected_delta = infer_time_step(df.index)
-
-# Build QC mask on normalized flags
-mask = build_qc_mask(flag_str, qc_column=qc_column, qc_flags=qc_flags)
-times = df.index[mask].sort_values()
-
-if times.empty:
-    print(
-        f"ℹ️ No QC flags matching column {qc_column} with digits '{qc_flags}' "
-        f"for station {station_id}.")
-
-# Group into consecutive runs
-runs = group_consecutive_times(times, expected_delta)
-print(
-f"👉 Station {station_id}: {len(runs)} chunk(s) to review "
-f"(qc_column={qc_column}, qc_flags='{qc_flags}', step={expected_delta}).")
-
-
-
-runs_list = runs + runs  # your test case
 
 # -----------------------------
 # 🧠 SESSION STATE INIT
@@ -102,6 +31,57 @@ if "i" not in st.session_state:
     st.session_state.results = []
 
 i = st.session_state.i
+
+# -----------------------------
+# 📦 IMPORTS / FUNCTIONS
+# -----------------------------
+sys.path.insert(1, '../')
+from functions import *
+
+# -----------------------------
+# 📊 LOAD & PREP DATA
+# -----------------------------
+df = load_station_data(station_id)
+
+# Clean data
+df = remove_empty(df)
+df["value"] = pd.to_numeric(df["value"], errors="coerce")
+
+# Flags
+flag_str = (
+    pd.to_numeric(df["flag"], errors="coerce")
+    .fillna(0)
+    .astype(int)
+    .astype(str)
+    .str.zfill(3)
+)
+
+df["flag_padded"] = normalize_flag_to_3char(df["flag"])
+
+# -----------------------------
+# ⏱ TIME PROCESSING
+# -----------------------------
+expected_delta = infer_time_step(df.index)
+
+mask = build_qc_mask(flag_str, qc_column=qc_column, qc_flags=qc_flags)
+times = df.index[mask].sort_values()
+
+if times.empty:
+    st.warning(
+        f"No QC flags matching column {qc_column} with digits '{qc_flags}' "
+        f"for station {station_id}."
+    )
+    st.stop()
+
+runs = group_consecutive_times(times, expected_delta)
+
+st.write(
+    f"👉 Station {station_id}: {len(runs)} event chunk(s) "
+    f"(qc_column={qc_column}, qc_flags='{qc_flags}', step={expected_delta})"
+)
+
+# (keep your test duplication if needed)
+runs_list = runs + runs
 
 # -----------------------------
 # 🛑 END CONDITION
@@ -155,7 +135,6 @@ if col1.button("⬅ Back"):
     if i > 0:
         st.session_state.i -= 1
 
-        # remove last result (undo)
         if len(st.session_state.results) > st.session_state.i:
             st.session_state.results.pop()
 
