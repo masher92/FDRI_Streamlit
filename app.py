@@ -20,8 +20,23 @@ station_id = st.sidebar.selectbox(
 
 sid = station_id
 
-qc_column = 1
-qc_flags = "7"
+QC_column_list = [1,2,3]
+
+qc_column = st.sidebar.selectbox(
+    "QC_column",
+    options=QC_column_list,
+    index=0
+)
+
+QC_flags_list = [0,1,2,3,4,5,6,7,8,9]
+
+qc_flags = st.sidebar.selectbox(
+    "QC_column",
+    options=QC_flags_list,
+    index=0
+)
+
+
 
 # -----------------------------
 # 🔁 RESET SESSION IF STATION CHANGES
